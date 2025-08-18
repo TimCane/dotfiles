@@ -1,0 +1,8 @@
+@import "catppuccin-mocha"
+
+configuration{
+    modi: "drun,window";
+    terminal: "alacritty";
+    location: 0;
+    disable-history: false;
+}
