@@ -40,18 +40,20 @@ yay -S --needed stow --noconfirm
 
 echo "[*] Stowing dotfiles..."
 
+cd "$DOTFILES_DIR"
+
 # Stow configurations
-stow bash --adopt *
-stow git --adopt *
-stow alacritty --adopt *
-stow i3 --adopt *
-stow lxqt --adopt *
-stow openbox --adopt *
-stow picom --adopt *
-stow polybar --adopt *
-stow rofi --adopt *
-stow wallpapers --adopt *
-stow fastfetch --adopt *
+stow bash --adopt
+stow git --adopt
+stow alacritty --adopt
+stow i3 --adopt
+stow lxqt --adopt
+stow openbox --adopt
+stow picom --adopt
+stow polybar --adopt
+stow rofi --adopt
+stow wallpapers --adopt
+stow fastfetch --adopt
 
 echo "[*] Creating system-wide symlink for LXQt theme..."
 if [ -d "$HOME/.themes/catppuccin-mocha/lxqt" ]; then
@@ -62,9 +64,20 @@ if [ -d "$HOME/.themes/catppuccin-mocha/lxqt" ]; then
   fi
 fi
 
+echo "[*] Creating system-wide symlink for sddm theme..."
+if [ -d "$HOME/.themes/catppuccin-mocha/sddm" ]; then
+  echo "[*] Creating system-wide symlink for sddm theme..."
+  sudo mkdir -p /usr/share/sddm/themes/
+  if [ ! -L "/usr/share/sddm/themes/catppuccin-mocha" ]; then
+    sudo ln -sfn "$HOME/.themes/catppuccin-mocha/sddm" "/usr/share/sddm/themes/catppuccin-mocha"
+  fi
+fi
+
+sudo ln -sfn "$HOME/.themes/catppuccin-mocha/sddm/sddm.conf" "/etc/sddm.conf"
+
 git restore . 
 
 echo "[*] Installing packages from AUR..."
-yay -S --needed alacritty i3-wm picom polybar rofi feh visual-studio-code-bin nano i3lock-color --noconfirm
+yay -S --needed alacritty i3-wm picom polybar rofi feh visual-studio-code-bin nano i3lock-color xorg-xrandr --noconfirm
 
 echo "[*] All done! 🎉"

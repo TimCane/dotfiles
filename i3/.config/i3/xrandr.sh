@@ -22,7 +22,7 @@ case "$DEVICE" in
 		;;
 	ursa)
 		# TODO: Add xrandr config for ursa
-		echo "No xrandr config for ursa yet."
+		xrandr --output HDMI-1 --mode 2560x1440 --pos 0x0 --rotate normal
 		;;
 	*)
 		echo "Unknown device: $DEVICE"
