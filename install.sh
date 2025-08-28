@@ -23,7 +23,7 @@ if [[ "$PWD" != "$DOTFILES_DIR" ]]; then
 fi
 
 echo "[*] Installing base packages..."
-sudo pacman -S --needed firefox github-cli unzip wget --noconfirm
+sudo pacman -S --needed firefox github-cli unzip wget noto-fonts --noconfirm
 
 echo "[*] Setting up yay (AUR helper)..."
 if ! command -v yay &>/dev/null; then
