@@ -1,11 +1,17 @@
 [Default Applications]
 application/pdf=org.pwmt.zathura.desktop
-image/png=feh.desktop
-image/jpeg=feh.desktop
-image/gif=feh.desktop
-image/webp=feh.desktop
-image/bmp=feh.desktop
-image/svg+xml=feh.desktop
+image/png=nsxiv.desktop
+image/jpeg=nsxiv.desktop
+image/gif=nsxiv.desktop
+image/webp=nsxiv.desktop
+image/bmp=nsxiv.desktop
+image/svg+xml=nsxiv.desktop
+video/mp4=mpv.desktop
+video/x-matroska=mpv.desktop
+video/webm=mpv.desktop
+video/x-msvideo=mpv.desktop
+video/mpeg=mpv.desktop
+inode/directory=thunar.desktop
 text/html=firefox-esr.desktop
 x-scheme-handler/http=firefox-esr.desktop
 x-scheme-handler/https=firefox-esr.desktop
