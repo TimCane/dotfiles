@@ -1,0 +1,14 @@
+[Default Applications]
+application/pdf=org.pwmt.zathura.desktop
+image/png=feh.desktop
+image/jpeg=feh.desktop
+image/gif=feh.desktop
+image/webp=feh.desktop
+image/bmp=feh.desktop
+image/svg+xml=feh.desktop
+text/html=firefox-esr.desktop
+x-scheme-handler/http=firefox-esr.desktop
+x-scheme-handler/https=firefox-esr.desktop
+x-scheme-handler/about=firefox-esr.desktop
+x-scheme-handler/unknown=firefox-esr.desktop
+x-scheme-handler/mailto=firefox-esr.desktop

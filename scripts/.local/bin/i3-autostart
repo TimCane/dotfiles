@@ -1,0 +1,12 @@
+#!/bin/bash
+# Hardware-dependent i3 startup
+
+# Display setup
+if command -v autorandr &>/dev/null; then
+    autorandr --change &
+fi
+
+# Blue light filter
+if command -v gammastep &>/dev/null; then
+    gammastep -l 51.5:-0.1 -t 6500:3500 &
+fi

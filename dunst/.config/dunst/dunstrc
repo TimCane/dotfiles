@@ -1,0 +1,57 @@
+[global]
+    font = JetBrains Mono 10
+    markup = full
+    format = "<b>%s</b>\n%b"
+    sort = yes
+    indicate_hidden = yes
+    alignment = left
+    show_age_threshold = 60
+    word_wrap = yes
+    ellipsize = middle
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = yes
+
+    # Geometry
+    width = 350
+    height = 150
+    origin = top-right
+    offset = 12x44
+    padding = 12
+    horizontal_padding = 14
+    frame_width = 2
+    gap_size = 4
+    corner_radius = 6
+
+    # Progress bar
+    progress_bar = true
+    progress_bar_height = 8
+
+    # Icons
+    enable_recursive_icon_lookup = true
+    icon_theme = Papirus-Dark
+    icon_position = left
+    max_icon_size = 48
+
+    # Mouse
+    mouse_left_click = close_current
+    mouse_middle_click = do_action
+    mouse_right_click = close_all
+
+[urgency_low]
+    background = "#3c3836"
+    foreground = "#ebdbb2"
+    frame_color = "#8ec07c"
+    timeout = 5
+
+[urgency_normal]
+    background = "#3c3836"
+    foreground = "#ebdbb2"
+    frame_color = "#fabd2f"
+    timeout = 10
+
+[urgency_critical]
+    background = "#282828"
+    foreground = "#fb4934"
+    frame_color = "#fb4934"
+    timeout = 0

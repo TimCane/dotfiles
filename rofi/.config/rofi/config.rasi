@@ -1,0 +1,90 @@
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    icon-theme: "Papirus-Dark";
+    font: "JetBrains Mono 12";
+    display-drun: "";
+    display-run: "";
+    display-window: "";
+    drun-display-format: "{name}";
+}
+
+* {
+    bg:       #282828;
+    bg1:      #3c3836;
+    bg2:      #504945;
+    fg:       #ebdbb2;
+    orange:   #fe8019;
+    aqua:     #8ec07c;
+    gray:     #928374;
+    red:      #fb4934;
+
+    background-color: @bg;
+    text-color:       @fg;
+}
+
+window {
+    width:            500px;
+    border:           2px;
+    border-color:     @orange;
+    border-radius:    6px;
+    padding:          0;
+}
+
+mainbox {
+    children: [inputbar, listview];
+    spacing: 0;
+}
+
+inputbar {
+    padding:          12px;
+    background-color: @bg1;
+    children:         [prompt, entry];
+    spacing:          8px;
+}
+
+prompt {
+    background-color: inherit;
+    text-color:       @orange;
+}
+
+entry {
+    background-color: inherit;
+    text-color:       @fg;
+    placeholder:      "Search...";
+    placeholder-color: @gray;
+}
+
+listview {
+    lines:            8;
+    padding:          8px;
+    scrollbar:        false;
+    spacing:          4px;
+}
+
+element, element.normal.normal, element.alternate.normal {
+    padding:          8px 12px;
+    border-radius:    4px;
+    background-color: @bg;
+    text-color:       @fg;
+}
+
+element.selected.normal, element.selected.alternate {
+    background-color: @bg2;
+    text-color:       @orange;
+}
+
+element-text, element-text.normal.normal, element-text.alternate.normal {
+    background-color: inherit;
+    text-color:       inherit;
+}
+
+element-text.selected.normal, element-text.selected.alternate {
+    background-color: inherit;
+    text-color:       inherit;
+}
+
+element-icon {
+    background-color: inherit;
+    size:             24px;
+}

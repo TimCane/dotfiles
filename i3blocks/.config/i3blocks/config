@@ -1,0 +1,39 @@
+# i3blocks config — Gruvbox themed
+
+command=/usr/share/i3blocks/$BLOCK_NAME/$BLOCK_NAME
+separator_block_width=15
+markup=pango
+
+[volume]
+command=wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{pct=int($2*100); if($3=="[MUTED]") printf "<span color=\"#928374\"> MUTE</span>"; else printf "<span color=\"#b8bb26\"> %d%%</span>", pct}'
+interval=once
+signal=10
+
+[brightness]
+command=printf "<span color='#fabd2f'> %d%%</span>" $(brightnessctl -m | cut -d, -f4 | tr -d %)
+interval=once
+signal=11
+
+[wifi]
+command=iwconfig wlan0 2>/dev/null | grep -oP 'ESSID:"\K[^"]+' | xargs -I{} printf "<span color='#83a598'> {}</span>" || printf "<span color='#928374'> down</span>"
+interval=10
+
+[battery]
+command=acpi -b 2>/dev/null | awk -F'[,:%]' '{pct=$2+0; icon=""; if(pct>80) icon=""; else if(pct>60) icon=""; else if(pct>40) icon=""; else if(pct>20) icon=""; if(pct<=20) printf "<span color=\"#fb4934\">%s %d%%</span>", icon, pct; else printf "<span color=\"#8ec07c\">%s %d%%</span>", icon, pct}'
+interval=30
+
+[cpu]
+command=top -bn1 | grep '%Cpu' | awk '{printf "<span color=\"#fe8019\"> %.0f%%</span>", 100-$8}'
+interval=10
+
+[memory]
+command=free -h | awk '/Mem:/{printf "<span color=\"#d3869b\"> %s/%s</span>", $3, $2}'
+interval=30
+
+[date]
+command=date +'<span color="#ebdbb2"> %a %b %d  %H:%M</span>'
+interval=60
+
+[power]
+command=if [ "$BLOCK_BUTTON" = "1" ]; then action=$(printf "Shutdown\nReboot\nSuspend\nLogout" | rofi -dmenu -p "Power") && case "$action" in Shutdown) systemctl poweroff;; Reboot) systemctl reboot;; Suspend) systemctl suspend;; Logout) i3-msg exit;; esac; fi; printf '<span color="#fb4934">⏻</span>'
+interval=once

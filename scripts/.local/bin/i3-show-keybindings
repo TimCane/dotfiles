@@ -1,0 +1,5 @@
+#!/bin/bash
+# Show i3 keybindings in rofi
+grep -oP '^\s*bindsym \K.*' ~/.config/i3/config \
+  | grep -v '^#' \
+  | rofi -dmenu -i -p "Keybindings" -no-custom

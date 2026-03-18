@@ -1,0 +1,232 @@
+# i3 config — Gruvbox Dark themed
+# Mod key = Super (Windows key)
+set $mod Mod4
+
+# Gruvbox colors
+set $bg       #282828
+set $bg1      #3c3836
+set $bg2      #504945
+set $fg       #ebdbb2
+set $red      #fb4934
+set $green    #b8bb26
+set $yellow   #fabd2f
+set $blue     #83a598
+set $purple   #d3869b
+set $aqua     #8ec07c
+set $orange   #fe8019
+set $gray     #928374
+
+# Font
+font pango:JetBrainsMono Nerd Font 10
+
+# Gaps
+gaps inner 8
+gaps outer 2
+smart_gaps on
+smart_borders on
+
+# Window borders
+default_border pixel 2
+default_floating_border pixel 2
+
+# Window colors          border  bg      text    indicator child_border
+client.focused           $orange $bg1    $fg     $aqua     $orange
+client.focused_inactive  $bg2    $bg     $fg     $bg2      $bg2
+client.unfocused         $bg1    $bg     $gray   $bg1      $bg1
+client.urgent            $red    $red    $fg     $red      $red
+client.placeholder       $bg     $bg     $fg     $bg       $bg
+client.background        $bg
+
+# ── Keybindings ──
+
+# Terminal
+bindsym $mod+Return exec alacritty
+
+# Kill focused window
+bindsym $mod+q kill
+bindsym $mod+Shift+q kill
+
+# Launcher (rofi)
+bindsym $mod+d exec rofi -show drun -show-icons
+bindsym $mod+Tab exec rofi -show window -show-icons
+
+# Clipboard manager (greenclip)
+bindsym $mod+c exec rofi -modi "clipboard:greenclip print" -show clipboard -show-icons
+
+# Navigation (vim-style + arrows)
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+semicolon focus right
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# Move windows
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+semicolon move right
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# Split orientation
+bindsym $mod+b split h
+bindsym $mod+v split v
+
+# Fullscreen
+bindsym $mod+f fullscreen toggle
+
+# Layout
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# Float
+bindsym $mod+Shift+space floating toggle
+bindsym $mod+space exec rofi -show drun -show-icons
+floating_modifier $mod
+
+# Scratchpad
+bindsym $mod+Shift+minus move scratchpad
+bindsym $mod+minus scratchpad show
+bindsym $mod+grave scratchpad show
+
+# Window marks
+bindsym $mod+m exec i3-input -F 'mark %s' -P 'Mark: '
+bindsym $mod+apostrophe exec i3-input -F '[con_mark="%s"] focus' -P 'Go to: '
+
+# Show all keybindings (Mod+/)
+bindsym $mod+slash exec /home/tjc/.local/bin/i3-show-keybindings
+
+# Power menu
+bindsym $mod+x exec /home/tjc/.local/bin/rofi-power-menu
+
+# File manager (yazi in terminal)
+bindsym $mod+n exec alacritty -e yazi
+
+# Workspaces
+set $ws1  "1"
+set $ws2  "2"
+set $ws3  "3"
+set $ws4  "4"
+set $ws5  "5"
+set $ws6  "6"
+set $ws7  "7"
+set $ws8  "8"
+set $ws9  "9"
+set $ws10 "10"
+
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+bindsym $mod+0 workspace $ws10
+
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws5
+bindsym $mod+Shift+6 move container to workspace $ws6
+bindsym $mod+Shift+7 move container to workspace $ws7
+bindsym $mod+Shift+8 move container to workspace $ws8
+bindsym $mod+Shift+9 move container to workspace $ws9
+bindsym $mod+Shift+0 move container to workspace $ws10
+
+# Reload / Restart / Exit
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+r restart
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'Exit i3?' -B 'Yes' 'i3-msg exit'"
+
+# Resize mode
+mode "resize" {
+    bindsym h resize shrink width 5 px or 5 ppt
+    bindsym j resize grow height 5 px or 5 ppt
+    bindsym k resize shrink height 5 px or 5 ppt
+    bindsym semicolon resize grow width 5 px or 5 ppt
+    bindsym Left resize shrink width 5 px or 5 ppt
+    bindsym Down resize grow height 5 px or 5 ppt
+    bindsym Up resize shrink height 5 px or 5 ppt
+    bindsym Right resize grow width 5 px or 5 ppt
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+    bindsym $mod+r mode "default"
+}
+bindsym $mod+r mode "resize"
+
+# ── Media / Hardware keys ──
+
+# Volume (PipeWire/PulseAudio)
+bindsym XF86AudioRaiseVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+bindsym XF86AudioLowerVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+bindsym XF86AudioMute exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+bindsym XF86AudioMicMute exec wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+
+# Media playback (playerctl)
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPrev exec playerctl previous
+
+# Brightness
+bindsym XF86MonBrightnessUp exec brightnessctl set +5%
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+
+# Screenshot (flameshot)
+bindsym Print exec flameshot gui
+bindsym Shift+Print exec flameshot full -p ~/Pictures
+bindsym $mod+Print exec flameshot screen -p ~/Pictures
+
+# Lock screen (betterlockscreen)
+bindsym $mod+l exec betterlockscreen -l dimblur
+
+# ── Floating rules ──
+for_window [class="Pavucontrol"] floating enable
+for_window [class="Galculator"] floating enable
+for_window [class="Blueman-manager"] floating enable
+for_window [class="Lxappearance"] floating enable
+for_window [class="File-roller"] floating enable
+for_window [window_role="pop-up"] floating enable
+for_window [window_role="task_dialog"] floating enable
+
+# Dropdown scratchpad terminal
+for_window [instance="dropdown"] floating enable, resize set 1200 600, move position center, move scratchpad
+exec --no-startup-id alacritty --class dropdown -e tmux new-session -A -s scratch
+
+# ── Workspace assignments ──
+assign [class="firefox"] $ws2
+
+# ── Polybar (replaces i3bar) ──
+exec_always --no-startup-id ~/.config/polybar/launch.sh
+
+# ── Autostart ──
+exec_always --no-startup-id picom --daemon
+exec --no-startup-id dunst
+exec --no-startup-id nm-applet
+exec --no-startup-id blueman-applet
+exec --no-startup-id lxpolkit
+exec --no-startup-id xss-lock -- betterlockscreen -l dimblur
+exec_always --no-startup-id feh --bg-fill ~/.config/i3/wallpaper.png
+exec --no-startup-id xdg-user-dirs-update
+exec --no-startup-id udiskie --tray
+
+# Clipboard daemon
+exec --no-startup-id greenclip daemon
+
+# Hardware-dependent startup (display, blue light filter)
+exec --no-startup-id ~/.local/bin/i3-autostart
+
+# Flash focused window on switch
+exec --no-startup-id flashfocus
+
+# Screen layout switching
+bindsym $mod+Shift+s exec ~/.local/bin/screenlayout single
+bindsym $mod+Shift+m exec ~/.local/bin/screenlayout multi
