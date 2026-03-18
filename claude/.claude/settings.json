@@ -1,0 +1,19 @@
+{
+  "skipDangerousModePermissionPrompt": true,
+  "env": {
+    "SUDO_ASKPASS": "/home/tjc/.local/bin/sudo-askpass"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -c 'if (.tool_input.command | test(\"\\\\bsudo\\\\b\")) then .tool_input.command |= gsub(\"\\\\bsudo\\\\b\"; \"sudo -A\") | {hookSpecificOutput: {hookEventName: \"PreToolUse\", updatedInput: .tool_input}} else {} end'"
+          }
+        ]
+      }
+    ]
+  }
+}
