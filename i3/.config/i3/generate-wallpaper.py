@@ -1,37 +1,77 @@
 #!/usr/bin/env python3
-"""Generate a Gruvbox-themed wallpaper as SVG then convert to PNG."""
-import subprocess, os
+"""Generate a randomized Gruvbox-themed wallpaper as SVG then convert to PNG."""
+import subprocess, os, random
 
-svg = '''<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080">
-  <defs>
-    <radialGradient id="g1" cx="50%" cy="50%" r="70%">
-      <stop offset="0%" stop-color="#3c3836"/>
-      <stop offset="100%" stop-color="#282828"/>
-    </radialGradient>
-  </defs>
-  <rect width="1920" height="1080" fill="url(#g1)"/>
-  <!-- Subtle geometric pattern -->
-  <g opacity="0.07">
-    <circle cx="960" cy="540" r="300" fill="none" stroke="#fe8019" stroke-width="1"/>
-    <circle cx="960" cy="540" r="250" fill="none" stroke="#fabd2f" stroke-width="1"/>
-    <circle cx="960" cy="540" r="200" fill="none" stroke="#b8bb26" stroke-width="1"/>
-    <circle cx="960" cy="540" r="150" fill="none" stroke="#83a598" stroke-width="1"/>
-    <circle cx="960" cy="540" r="100" fill="none" stroke="#d3869b" stroke-width="1"/>
-    <circle cx="960" cy="540" r="350" fill="none" stroke="#8ec07c" stroke-width="0.5"/>
-    <circle cx="960" cy="540" r="400" fill="none" stroke="#928374" stroke-width="0.5"/>
+W, H = 3840, 2160
+
+# Gruvbox accent palette
+ACCENTS = ['#fe8019', '#fb4934']
+
+def rand_color():
+    return random.choice(ACCENTS)
+
+def concentric_circles():
+    cx = random.randint(W // 4, 3 * W // 4)
+    cy = random.randint(H // 4, 3 * H // 4)
+    count = random.randint(4, 8)
+    base_r = random.randint(150, 400)
+    step = random.randint(40, 80)
+    lines = []
+    for i in range(count):
+        r = base_r + i * step
+        sw = round(random.uniform(0.5, 4.0), 1)
+        lines.append(f'    <circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{rand_color()}" stroke-width="{sw}"/>')
+    return '\n'.join(lines)
+
+def scattered_circles():
+    lines = []
+    for _ in range(random.randint(3, 8)):
+        cx = random.randint(0, W)
+        cy = random.randint(0, H)
+        r = random.randint(50, 500)
+        sw = round(random.uniform(3, 4.0), 1)
+        lines.append(f'    <circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{rand_color()}" stroke-width="{sw}"/>')
+    return '\n'.join(lines)
+
+def diagonal_lines():
+    lines = []
+    for _ in range(random.randint(2, 6)):
+        x1 = random.randint(-200, W + 200)
+        y1 = random.randint(-200, H + 200)
+        x2 = random.randint(-200, W + 200)
+        y2 = random.randint(-200, H + 200)
+        sw = round(random.uniform(0.5, 3.0), 1)
+        lines.append(f'    <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{rand_color()}" stroke-width="{sw}"/>')
+    return '\n'.join(lines)
+
+def corner_accents():
+    color = rand_color()
+    length = random.randint(300, 600)
+    thickness = random.randint(1, 3)
+    return f'''  <g opacity="0.04">
+    <rect x="0" y="0" width="{length}" height="{thickness}" fill="{color}"/>
+    <rect x="0" y="0" width="{thickness}" height="{length}" fill="{color}"/>
+    <rect x="{W - length}" y="0" width="{length}" height="{thickness}" fill="{color}"/>
+    <rect x="{W - thickness}" y="0" width="{thickness}" height="{length}" fill="{color}"/>
+    <rect x="0" y="{H - thickness}" width="{length}" height="{thickness}" fill="{color}"/>
+    <rect x="0" y="{H - length}" width="{thickness}" height="{length}" fill="{color}"/>
+    <rect x="{W - length}" y="{H - thickness}" width="{length}" height="{thickness}" fill="{color}"/>
+    <rect x="{W - thickness}" y="{H - length}" width="{thickness}" height="{length}" fill="{color}"/>
+  </g>'''
+
+# Pick 2-3 random geometric elements
+elements = random.sample([concentric_circles, scattered_circles, diagonal_lines], k=random.randint(2, 3))
+
+shapes = '\n'.join(el() for el in elements)
+opacity = round(random.uniform(0.10, 0.20), 2)
+
+svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}">
+  <rect width="{W}" height="{H}" fill="#282828"/>
+  <g opacity="{opacity}">
+{shapes}
   </g>
-  <!-- Corner accents -->
-  <g opacity="0.04">
-    <rect x="0" y="0" width="400" height="2" fill="#fe8019"/>
-    <rect x="0" y="0" width="2" height="300" fill="#fe8019"/>
-    <rect x="1520" y="0" width="400" height="2" fill="#fe8019"/>
-    <rect x="1918" y="0" width="2" height="300" fill="#fe8019"/>
-    <rect x="0" y="1078" width="400" height="2" fill="#fe8019"/>
-    <rect x="0" y="780" width="2" height="300" fill="#fe8019"/>
-    <rect x="1520" y="1078" width="400" height="2" fill="#fe8019"/>
-    <rect x="1918" y="780" width="2" height="300" fill="#fe8019"/>
-  </g>
+{corner_accents()}
 </svg>'''
 
 svg_path = os.path.expanduser('~/.config/i3/wallpaper.svg')
@@ -40,14 +80,12 @@ png_path = os.path.expanduser('~/.config/i3/wallpaper.png')
 with open(svg_path, 'w') as f:
     f.write(svg)
 
-# Try rsvg-convert first, fall back to convert (ImageMagick)
 try:
     subprocess.run(['rsvg-convert', svg_path, '-o', png_path], check=True)
 except FileNotFoundError:
     try:
         subprocess.run(['convert', svg_path, png_path], check=True)
     except FileNotFoundError:
-        # Just keep SVG, feh can handle it
         import shutil
         shutil.copy(svg_path, png_path.replace('.png', '.svg'))
         print("No converter found, keeping SVG")
