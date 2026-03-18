@@ -13,3 +13,5 @@ if type "xrandr"; then
 else
   polybar --reload primary &
 fi
+
+echo MONITOR
