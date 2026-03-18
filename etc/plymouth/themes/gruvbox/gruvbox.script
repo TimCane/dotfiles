@@ -1,0 +1,102 @@
+# Plymouth Gruvbox theme script
+
+Window.SetBackgroundTopColor(0.16, 0.16, 0.16);
+Window.SetBackgroundBottomColor(0.16, 0.16, 0.16);
+
+# Logo (text-based)
+logo.image = Image.Text("Debian", 1, 0.92, 0.70, "JetBrains Mono");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
+logo.sprite.SetY(Window.GetHeight() / 2 - 80);
+
+# Password prompt styling
+fun dialog_setup(dialogImagePath, bulletImagePath) {
+    global.dialog;
+    global.bullet;
+
+    dialog.image = Image(dialogImagePath);
+    dialog.sprite = Sprite(dialog.image);
+    dialog.sprite.SetX(Window.GetWidth() / 2 - dialog.image.GetWidth() / 2);
+    dialog.sprite.SetY(Window.GetHeight() / 2 - dialog.image.GetHeight() / 2 + 40);
+    dialog.sprite.SetZ(10000);
+
+    bullet.image = Image(bulletImagePath);
+    bullet.count = 0;
+}
+
+fun dialog_opacity(opacity) {
+    dialog.sprite.SetOpacity(opacity);
+    for (i = 0; i < bullet.count; i++) {
+        bullet[i].sprite.SetOpacity(opacity);
+    }
+}
+
+fun display_password_callback(prompt, bullets) {
+    global.bullet;
+
+    if (!global.dialog)
+        return;
+
+    # Clear old bullets
+    for (i = 0; i < bullet.count; i++) {
+        bullet[i].sprite.SetOpacity(0);
+    }
+
+    # Draw new bullets
+    for (i = 0; i < bullets; i++) {
+        bullet[i].sprite = Sprite(bullet.image);
+        x = Window.GetWidth() / 2 - (bullets * 18) / 2 + i * 18;
+        bullet[i].sprite.SetX(x);
+        bullet[i].sprite.SetY(Window.GetHeight() / 2 + 50);
+        bullet[i].sprite.SetZ(10001);
+    }
+    bullet.count = bullets;
+
+    # Prompt label
+    if (!global.prompt_sprite) {
+        prompt_image = Image.Text(prompt, 0.92, 0.86, 0.70, "JetBrains Mono");
+        global.prompt_sprite = Sprite(prompt_image);
+        prompt_sprite.SetX(Window.GetWidth() / 2 - prompt_image.GetWidth() / 2);
+        prompt_sprite.SetY(Window.GetHeight() / 2 + 10);
+    }
+}
+
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+# Progress spinner
+count = 0;
+fun refresh_callback() {
+    global.count;
+    count++;
+
+    if (Plymouth.GetMode() == "boot") {
+        # Simple pulsing dot
+        opacity = Math.Abs(Math.Sin(count / 30.0));
+        dot = Image.Text("*", 0.99, 0.50, 0.10, "JetBrains Mono");
+        if (!global.dot_sprite) {
+            global.dot_sprite = Sprite(dot);
+            dot_sprite.SetX(Window.GetWidth() / 2 - dot.GetWidth() / 2);
+            dot_sprite.SetY(Window.GetHeight() / 2 + 100);
+        }
+        dot_sprite.SetOpacity(opacity);
+    }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+fun display_normal_callback() {
+    # No-op for normal display
+}
+
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+fun message_callback(text) {
+    msg_image = Image.Text(text, 0.92, 0.86, 0.70, "JetBrains Mono");
+    if (!global.msg_sprite)
+        global.msg_sprite = Sprite();
+    msg_sprite.SetImage(msg_image);
+    msg_sprite.SetX(Window.GetWidth() / 2 - msg_image.GetWidth() / 2);
+    msg_sprite.SetY(Window.GetHeight() / 2 + 130);
+}
+
+Plymouth.SetMessageFunction(message_callback);

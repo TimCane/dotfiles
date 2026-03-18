@@ -1,0 +1,28 @@
+$include /etc/inputrc
+
+# Case-insensitive tab completion
+set completion-ignore-case on
+
+# Treat - and _ as equivalent in completion
+set completion-map-case on
+
+# Show all matches on ambiguous completion (no double-tab)
+set show-all-if-ambiguous on
+
+# Colour file types in completion like ls
+set colored-stats on
+set colored-completion-prefix on
+
+# Show file type indicator in completions (/, @, * etc.)
+set visible-stats on
+
+# Cycle through completions with Tab/Shift-Tab
+TAB: menu-complete
+"\e[Z": menu-complete-backward
+
+# Smarter history search: type prefix then use arrows
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# Don't beep
+set bell-style none

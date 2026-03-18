@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Gruvbox
+Description=Gruvbox Dark themed boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/gruvbox
+ScriptFile=/usr/share/plymouth/themes/gruvbox/gruvbox.script

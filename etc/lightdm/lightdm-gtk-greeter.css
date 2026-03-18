@@ -1,0 +1,112 @@
+/* LightDM GTK Greeter — Gruvbox Dark + Orange */
+
+/* Panel */
+#panel_window {
+    background-color: #282828;
+    color: #ebdbb2;
+    border-bottom: 2px solid #fe8019;
+}
+
+#panel_window .menubar,
+#panel_window .menubar > .menuitem {
+    background-color: transparent;
+    color: #ebdbb2;
+}
+
+#panel_window .menubar .menuitem:hover {
+    color: #fe8019;
+}
+
+/* Login window */
+#login_window,
+#shutdown_dialog,
+#restart_dialog {
+    border-style: none;
+    border-radius: 6px;
+    background-color: #282828;
+    color: #ebdbb2;
+    box-shadow: inset 1px 0 #fe8019,
+                inset -1px 0 #fe8019,
+                inset 0 1px #fe8019,
+                inset 0 -1px #fe8019;
+}
+
+/* Username combo */
+#login_window #user_combobox {
+    color: #fe8019;
+    font: 16px;
+}
+
+/* Text entries */
+#login_window entry {
+    padding: 8px 12px;
+    border: 1px solid #504945;
+    border-radius: 4px;
+    background-color: #3c3836;
+    color: #ebdbb2;
+    box-shadow: none;
+}
+
+#login_window entry:focus {
+    border-color: #fe8019;
+    box-shadow: inset 1px 0 alpha(#fe8019, 0.3),
+                inset -1px 0 alpha(#fe8019, 0.3),
+                inset 0 1px alpha(#fe8019, 0.3),
+                inset 0 -1px alpha(#fe8019, 0.3);
+}
+
+/* Buttons */
+#login_window button,
+#shutdown_dialog button,
+#restart_dialog button {
+    padding: 6px 16px;
+    border: 1px solid #504945;
+    border-radius: 4px;
+    background-color: #3c3836;
+    color: #ebdbb2;
+}
+
+#login_window button:hover,
+#shutdown_dialog button:hover,
+#restart_dialog button:hover {
+    background-color: #504945;
+    border-color: #fe8019;
+    color: #fe8019;
+}
+
+/* Focused / default action button — solid orange */
+#login_window button.default,
+#login_window button:focus,
+#shutdown_dialog button:focus,
+#restart_dialog button:focus {
+    background-color: #fe8019;
+    border-color: #fe8019;
+    color: #282828;
+}
+
+#login_window button.default:hover,
+#login_window button:focus:hover {
+    background-color: #fabd2f;
+    border-color: #fabd2f;
+    color: #282828;
+}
+
+/* Bottom button bar area */
+#buttonbox_frame {
+    padding-top: 16px;
+    padding-bottom: 0;
+    border-style: none;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background-color: #3c3836;
+    box-shadow: inset 1px 0 #fe8019,
+                inset -1px 0 #fe8019,
+                inset 0 -1px #fe8019;
+}
+
+/* Warning/error bar */
+#greeter_infobar {
+    background-color: #fb4934;
+    color: #282828;
+    font: bold;
+}

@@ -17,6 +17,9 @@ style = "Italic"
 padding = { x = 8, y = 8 }
 opacity = 0.95
 
+[selection]
+save_to_clipboard = true
+
 [scrolling]
 history = 10000
 
@@ -37,6 +40,22 @@ blue    = "#458588"
 magenta = "#b16286"
 cyan    = "#689d6a"
 white   = "#a89984"
+
+[colors.selection]
+text = "#282828"
+background = "#fabd2f"
+
+[[mouse.bindings]]
+mouse = "Right"
+action = "Paste"
+
+[cursor]
+thickness = 0.2
+unfocused_hollow = true
+
+[cursor.style]
+shape = "Beam"
+blinking = "On"
 
 [colors.bright]
 black   = "#928374"

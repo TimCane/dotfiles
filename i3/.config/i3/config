@@ -105,8 +105,9 @@ bindsym $mod+slash exec /home/tjc/.local/bin/i3-show-keybindings
 # Power menu
 bindsym $mod+x exec /home/tjc/.local/bin/rofi-power-menu
 
-# File manager (yazi in terminal)
-bindsym $mod+n exec alacritty -e yazi
+# File manager
+bindsym $mod+n exec thunar
+bindsym $mod+Shift+n exec alacritty -e yazi
 
 # Workspaces
 set $ws1  "1"
@@ -194,6 +195,10 @@ for_window [class="Galculator"] floating enable
 for_window [class="Blueman-manager"] floating enable
 for_window [class="Lxappearance"] floating enable
 for_window [class="File-roller"] floating enable
+for_window [class="Gnome-disks"] floating enable
+for_window [class="Baobab"] floating enable
+for_window [class="Nsxiv"] floating enable
+for_window [class="mpv"] floating enable
 for_window [window_role="pop-up"] floating enable
 for_window [window_role="task_dialog"] floating enable
 
@@ -214,7 +219,8 @@ exec --no-startup-id nm-applet
 exec --no-startup-id blueman-applet
 exec --no-startup-id lxpolkit
 exec --no-startup-id xss-lock -- betterlockscreen -l dimblur
-exec_always --no-startup-id feh --bg-fill ~/.config/i3/wallpaper.png
+exec --no-startup-id xautolock -time 10 -locker "betterlockscreen -l dimblur" -notify 30 -notifier "dunstify -u low 'Screen will lock in 30s'" -killtime 20 -killer "systemctl suspend"
+exec_always --no-startup-id sh -c 'python3 ~/.config/i3/generate-wallpaper.py && feh --bg-fill ~/.config/i3/wallpaper.png'
 exec --no-startup-id xdg-user-dirs-update
 exec --no-startup-id udiskie --tray
 

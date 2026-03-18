@@ -1,0 +1,22 @@
+[credential "https://github.com"]
+	helper =
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/usr/bin/gh auth git-credential
+[user]
+	email = 3074314+TimCane@users.noreply.github.com
+	name = Tim Cane
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	syntax-theme = gruvbox-dark
+	side-by-side = true
+	line-numbers = true
+[merge]
+	conflictstyle = diff3
+[diff]
+	colorMoved = default
