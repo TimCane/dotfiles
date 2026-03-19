@@ -304,6 +304,11 @@ configure_grub_theme() {
     info "Installing GRUB Gruvbox theme..."
     rm -rf /tmp/tartarus-grub
     git clone --depth 1 https://github.com/AllJavi/tartarus-grub.git /tmp/tartarus-grub
+
+    # Remove the logo from the theme
+    rm -f /tmp/tartarus-grub/tartarus/logo.png
+    sed -i '/^+ image {/,/^}/d' /tmp/tartarus-grub/tartarus/theme.txt
+
     sudo mkdir -p /boot/grub/themes
     sudo cp -r /tmp/tartarus-grub/tartarus /boot/grub/themes/
     rm -rf /tmp/tartarus-grub
@@ -322,8 +327,7 @@ configure_plymouth() {
     info "Installing Gruvbox Plymouth theme..."
     sudo cp -r "$DOTFILES_DIR/etc/plymouth/themes/gruvbox" /usr/share/plymouth/themes/
     sudo cp "$DOTFILES_DIR/etc/plymouth/plymouthd.conf" /etc/plymouth/plymouthd.conf
-    sudo plymouth-set-default-theme gruvbox
-    sudo update-initramfs -u || warn "Failed to update initramfs — run: sudo update-initramfs -u"
+    sudo plymouth-set-default-theme -R gruvbox || warn "Failed to set plymouth theme — run: sudo plymouth-set-default-theme -R gruvbox"
 }
 
 # ── Claude CLI ──
