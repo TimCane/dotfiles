@@ -335,7 +335,7 @@ install_claude() {
         return
     fi
     info "Installing Claude CLI..."
-    curl -fsSL https://cli.anthropic.com/install.sh | sh
+    curl -fsSL https://claude.ai/install.sh | bash
 }
 
 # ── Secure Boot ──
