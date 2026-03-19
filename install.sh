@@ -172,7 +172,7 @@ install_packages() {
     local archives=(file-roller p7zip-full unrar)
     local disktools=(gnome-disk-utility baobab)
     local fonts=(fonts-noto-color-emoji fonts-noto-cjk fonts-liberation)
-    local desktop=(xdg-desktop-portal-gtk gnome-keyring libsecret-tools)
+    local desktop=(xdg-desktop-portal-gtk gnome-keyring libsecret-tools lightdm lightdm-gtk-greeter)
     local power=(tlp)
     local maintenance=(unattended-upgrades)
     local vpn=(openvpn)
