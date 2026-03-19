@@ -35,7 +35,9 @@ fun display_password_callback(prompt, bullets) {
     global.bullet;
 
     if (!global.dialog)
-        return;
+        dialog_setup(Image.Dir + "/dialog.png", Image.Dir + "/bullet.png");
+
+    dialog_opacity(1);
 
     # Clear old bullets
     for (i = 0; i < bullet.count; i++) {
@@ -60,6 +62,10 @@ fun display_password_callback(prompt, bullets) {
         prompt_sprite.SetY(Window.GetHeight() / 2 + 10);
     }
 }
+
+# Initialize dialog images for LUKS password prompt
+dialog_setup(Image.Dir + "/dialog.png", Image.Dir + "/bullet.png");
+dialog_opacity(0);
 
 Plymouth.SetDisplayPasswordFunction(display_password_callback);
 

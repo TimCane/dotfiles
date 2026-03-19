@@ -100,7 +100,7 @@ install_packages() {
         ufw
         apparmor-utils
         sbsigntool mokutil
-        imagemagick
+        imagemagick librsvg2-bin
         jq
         pipx
     )
@@ -323,6 +323,28 @@ configure_plymouth() {
     info "Installing Gruvbox Plymouth theme..."
     sudo cp -r "$DOTFILES_DIR/etc/plymouth/themes/gruvbox" /usr/share/plymouth/themes/
     sudo cp "$DOTFILES_DIR/etc/plymouth/plymouthd.conf" /etc/plymouth/plymouthd.conf
+
+    # Ensure GRUB passes 'splash' so plymouth activates (needed for graphical boot + LUKS prompt)
+    local grub_default="/etc/default/grub"
+    if ! grep -q 'splash' "$grub_default"; then
+        info "Adding 'splash' to GRUB_CMDLINE_LINUX_DEFAULT..."
+        sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"/GRUB_CMDLINE_LINUX_DEFAULT="\1 splash"/' "$grub_default"
+    fi
+
+    # Set native graphics mode so plymouth renders at full resolution
+    if grep -q '^#\?GRUB_GFXMODE=' "$grub_default"; then
+        sudo sed -i 's/^#\?GRUB_GFXMODE=.*/GRUB_GFXMODE=auto/' "$grub_default"
+    else
+        echo 'GRUB_GFXMODE=auto' | sudo tee -a "$grub_default" > /dev/null
+    fi
+    # Keep the same mode for the linux payload (plymouth)
+    if ! grep -q '^GRUB_GFXPAYLOAD_LINUX=' "$grub_default"; then
+        echo 'GRUB_GFXPAYLOAD_LINUX=keep' | sudo tee -a "$grub_default" > /dev/null
+    else
+        sudo sed -i 's/^GRUB_GFXPAYLOAD_LINUX=.*/GRUB_GFXPAYLOAD_LINUX=keep/' "$grub_default"
+    fi
+
+    sudo update-grub
     sudo plymouth-set-default-theme -R gruvbox || warn "Failed to set plymouth theme — run: sudo plymouth-set-default-theme -R gruvbox"
 }
 
@@ -499,13 +521,14 @@ stow_packages() {
         i3 alacritty polybar rofi i3blocks picom dunst
         bash tmux scripts x11 gtk xdg flameshot fzf code git
         greenclip glow qt5ct fastfetch fontconfig starship readline
+        claude
     )
 
     # Ensure target dirs exist
     mkdir -p "$HOME/.config" "$HOME/.local/bin"
 
-    # Remove Debian default files that conflict with stow
-    for f in .bashrc .profile; do
+    # Remove files that conflict with stow
+    for f in .bashrc .profile .claude/settings.json; do
         if [[ -f "$HOME/$f" && ! -L "$HOME/$f" ]]; then
             info "  Backing up ~/$f to ~/${f}.bak"
             mv "$HOME/$f" "$HOME/${f}.bak"

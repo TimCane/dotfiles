@@ -2,7 +2,9 @@
 # Hardware-dependent i3 startup
 
 # Display setup
-if command -v autorandr &>/dev/null; then
+if [ "$(hostname)" = "desktop" ]; then
+    screenlayout single &
+elif command -v autorandr &>/dev/null; then
     autorandr --change &
 fi
 

@@ -1,0 +1,5 @@
+# Only track User/settings.json — ignore all VS Code runtime state
+.config/Code/*
+!.config/Code/User/
+.config/Code/User/*
+!.config/Code/User/settings.json
