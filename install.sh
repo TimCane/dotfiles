@@ -317,12 +317,10 @@ install_gruvbox_gtk() {
 
     info "Installing Gruvbox GTK theme..."
     mkdir -p "$HOME/.themes"
-    _install_gtk_theme() {
-        git clone --depth 1 https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git /tmp/gruvbox-gtk
-        cp -r /tmp/gruvbox-gtk/themes/Gruvbox-Dark* "$HOME/.themes/"
-        rm -rf /tmp/gruvbox-gtk
-    }
-    run _install_gtk_theme
+    rm -rf /tmp/gruvbox-gtk
+    git clone --depth 1 https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git /tmp/gruvbox-gtk
+    cp -r /tmp/gruvbox-gtk/themes/Gruvbox-Dark* "$HOME/.themes/"
+    rm -rf /tmp/gruvbox-gtk
 }
 
 # ── Cursor theme ──
