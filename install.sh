@@ -83,7 +83,6 @@ install_packages() {
         papirus-icon-theme
         lxappearance
         qt5ct
-        sassc
         gtk2-engines-murrine
         gnome-themes-extra
     )
@@ -111,12 +110,12 @@ install_packages() {
     local media=(nsxiv mpv firefox-esr)
     local archives=(file-roller p7zip-full unrar)
     local disktools=(gnome-disk-utility baobab)
-    local fonts=(fonts-noto-color-emoji fonts-noto-cjk fonts-liberation)
+    local fonts=(fonts-noto fonts-noto-color-emoji fonts-noto-cjk fonts-liberation)
     local desktop=(xdg-desktop-portal-gtk gnome-keyring libsecret-tools lightdm lightdm-gtk-greeter)
     local power=(tlp)
     local maintenance=(unattended-upgrades)
     local vpn=(openvpn)
-    local terminal=(bash-completion eza bat)
+    local terminal=(bash-completion eza bat bc)
 
     info "Updating package lists..."
     sudo apt update
@@ -261,17 +260,16 @@ install_fonts() {
 
 # ── GTK Theme ──
 install_gruvbox_gtk() {
-    if [[ -d /usr/share/themes/Gruvbox-Dark ]] || [[ -d "$HOME/.themes/Gruvbox-Dark" ]]; then
+    if [[ -d /usr/share/themes/Gruvbox-Material-Dark ]]; then
         info "Gruvbox GTK theme already installed"
         return
     fi
 
-    info "Installing Gruvbox GTK theme..."
-    mkdir -p "$HOME/.themes"
-    rm -rf /tmp/gruvbox-gtk
-    git clone --depth 1 https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git /tmp/gruvbox-gtk
-    bash /tmp/gruvbox-gtk/themes/install.sh -c dark -t default
-    rm -rf /tmp/gruvbox-gtk
+    info "Installing Gruvbox Material Dark GTK theme..."
+    rm -rf /tmp/gruvbox-material-gtk
+    git clone --depth 1 https://github.com/TheGreatMcPain/gruvbox-material-gtk.git /tmp/gruvbox-material-gtk
+    sudo cp -r /tmp/gruvbox-material-gtk/themes/Gruvbox-Material-Dark /usr/share/themes/
+    rm -rf /tmp/gruvbox-material-gtk
 }
 
 # ── Cursor theme ──
