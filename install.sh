@@ -319,7 +319,7 @@ install_gruvbox_gtk() {
     mkdir -p "$HOME/.themes"
     rm -rf /tmp/gruvbox-gtk
     git clone --depth 1 https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git /tmp/gruvbox-gtk
-    cp -r /tmp/gruvbox-gtk/themes/Gruvbox-Dark* "$HOME/.themes/"
+    bash /tmp/gruvbox-gtk/themes/install.sh -c Dark -t default
     rm -rf /tmp/gruvbox-gtk
 }
 
