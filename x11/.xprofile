@@ -6,3 +6,6 @@ export SUDO_ASKPASS="$HOME/.local/bin/sudo-askpass"
 
 eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh)
 export SSH_AUTH_SOCK
+
+# Set single-monitor layout before i3 starts (avoids workspace-on-wrong-monitor issues)
+"$HOME/.local/bin/screenlayout" single

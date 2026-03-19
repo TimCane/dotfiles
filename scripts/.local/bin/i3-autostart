@@ -1,8 +1,8 @@
 #!/bin/bash
 # Hardware-dependent i3 startup
 
-# Display setup
-if command -v autorandr &>/dev/null; then
+# Display setup (single-monitor xrandr runs in .xprofile before i3 starts)
+if [ "$(hostname)" != "desktop" ] && command -v autorandr &>/dev/null; then
     autorandr --change &
 fi
 

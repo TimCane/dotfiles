@@ -23,65 +23,12 @@ info()  { echo -e "${green}[+]${reset} $*"; }
 warn()  { echo -e "${yellow}[!]${reset} $*"; }
 error() { echo -e "${red}[x]${reset} $*"; }
 
-# Run a command with rolling dimmed output (last 5 lines), cleared on finish.
-# On failure the last 20 lines are shown for debugging.
-run() {
-    local max=5
-    local tmp
-    tmp="$(mktemp)"
-    local cols
-    cols="$(tput cols 2>/dev/null || echo 80)"
 
-    "$@" &> "$tmp" &
-    local pid=$!
-
-    local on_screen=0 prev_total=0
-    while kill -0 "$pid" 2>/dev/null; do
-        local total
-        total="$(wc -l < "$tmp")"
-        if ((total != prev_total)); then
-            local show=$((total < max ? total : max))
-            ((on_screen > 0)) && printf '\033[%dA' "$on_screen"
-            tail -n "$show" "$tmp" | while IFS= read -r l; do
-                printf "${dim}  \033[K%.*s${reset}\n" "$((cols - 4))" "$l"
-            done
-            on_screen=$show
-            prev_total=$total
-        fi
-        sleep 0.1
-    done
-
-    wait "$pid"
-    local rc=$?
-
-    # Final redraw in case output arrived after last poll
-    local total
-    total="$(wc -l < "$tmp")"
-    if ((total != prev_total)); then
-        local show=$((total < max ? total : max))
-        ((on_screen > 0)) && printf '\033[%dA' "$on_screen"
-        tail -n "$show" "$tmp" | while IFS= read -r l; do
-            printf "${dim}  \033[K%.*s${reset}\n" "$((cols - 4))" "$l"
-        done
-        on_screen=$show
-    fi
-
-    # Clear rolling area
-    if ((on_screen > 0)); then
-        printf '\033[%dA' "$on_screen"
-        for ((i = 0; i < on_screen; i++)); do printf '\033[K\n'; done
-        printf '\033[%dA' "$on_screen"
-    fi
-
-    # On failure, dump last 20 lines for debugging
-    if ((rc != 0)); then
-        tail -n 20 "$tmp" | while IFS= read -r l; do
-            printf "${dim}  %s${reset}\n" "$l"
-        done
-    fi
-
-    rm -f "$tmp"
-    return "$rc"
+# ── Bootstrap essentials (needed before anything else) ──
+bootstrap() {
+    info "Installing bootstrap dependencies..."
+    sudo apt update
+    sudo apt install -y curl wget gnupg unzip
 }
 
 # ── Third-party repositories ──
@@ -136,6 +83,8 @@ install_packages() {
         papirus-icon-theme
         lxappearance
         qt5ct
+        gtk2-engines-murrine
+        gnome-themes-extra
     )
 
     # Utilities
@@ -150,28 +99,38 @@ install_packages() {
         plymouth plymouth-themes
         ufw
         apparmor-utils
-        shim-signed grub-efi-amd64-signed sbsigntool mokutil
+        sbsigntool mokutil
+        imagemagick librsvg2-bin
+        jq
+        pipx
+        linux-headers-amd64
     )
 
     local audio=(pipewire pipewire-pulse wireplumber pavucontrol)
     local filemanager=(thunar tumbler ffmpegthumbnailer)
-    local media=(nsxiv mpv)
+    local media=(nsxiv mpv firefox-esr)
     local archives=(file-roller p7zip-full unrar)
     local disktools=(gnome-disk-utility baobab)
-    local fonts=(fonts-noto-color-emoji fonts-noto-cjk fonts-liberation)
-    local desktop=(xdg-desktop-portal-gtk gnome-keyring libsecret-tools)
+    local fonts=(fonts-noto fonts-noto-color-emoji fonts-noto-cjk fonts-liberation)
+    local desktop=(xdg-desktop-portal-gtk gnome-keyring libsecret-tools lightdm lightdm-gtk-greeter)
     local power=(tlp)
     local maintenance=(unattended-upgrades)
     local vpn=(openvpn)
-    local terminal=(bash-completion eza bat)
+    local terminal=(bash-completion eza bat bc)
 
     info "Updating package lists..."
-    run sudo apt update
+    sudo apt update
     info "Installing apt packages..."
-    run sudo apt install -y "${core[@]}" "${polybar[@]}" "${theming[@]}" "${utils[@]}" \
+    sudo DEBIAN_FRONTEND=noninteractive apt install -y \
+        "${core[@]}" "${polybar[@]}" "${theming[@]}" "${utils[@]}" \
         "${audio[@]}" "${filemanager[@]}" "${media[@]}" "${archives[@]}" \
         "${disktools[@]}" "${fonts[@]}" "${desktop[@]}" "${power[@]}" \
         "${maintenance[@]}" "${vpn[@]}" "${terminal[@]}"
+
+    # Secure boot packages — optional, may not be available on all systems
+    if [[ -d /sys/firmware/efi ]]; then
+        sudo apt install -y shim-signed grub-efi-amd64-signed || warn "Secure boot packages not available"
+    fi
 
     # Packages not in default repos — install manually if missing
     install_if_missing "greenclip" install_greenclip
@@ -182,14 +141,20 @@ install_packages() {
     install_if_missing "protonvpn-cli" install_protonvpn
     install_if_missing "delta" install_delta
     install_if_missing "starship" install_starship
-    install_if_missing "ble" install_blesh
+    # ble.sh doesn't install a binary — check for its data directory
+    if [[ ! -d "$HOME/.local/share/blesh" ]]; then
+        warn "ble.sh not found, installing..."
+        install_blesh || error "Failed to install ble.sh — install it manually"
+    else
+        info "ble.sh already installed"
+    fi
 }
 
 install_if_missing() {
     local cmd="$1" installer="$2"
     if ! command -v "$cmd" &>/dev/null; then
         warn "$cmd not found, installing..."
-        run "$installer" || error "Failed to install $cmd — install it manually"
+        "$installer" || error "Failed to install $cmd — install it manually"
     else
         info "$cmd already installed"
     fi
@@ -212,7 +177,7 @@ install_greenclip() {
 }
 
 install_flashfocus() {
-    pip install --user flashfocus 2>/dev/null || pipx install flashfocus
+    pipx install --force flashfocus
 }
 
 install_betterlockscreen() {
@@ -220,6 +185,7 @@ install_betterlockscreen() {
     wget -q "$url" -O /tmp/bls-install.sh
     chmod +x /tmp/bls-install.sh
     /tmp/bls-install.sh user
+    export PATH="$HOME/.local/bin:$PATH"
 }
 
 install_proton_pass() {
@@ -228,13 +194,15 @@ install_proton_pass() {
 }
 
 install_yazi() {
-    # Check for cargo, else suggest manual install
-    if command -v cargo &>/dev/null; then
-        cargo install --locked yazi-fm yazi-cli
-    else
-        error "Install yazi manually: https://yazi-rs.github.io/docs/installation"
-        return 1
-    fi
+    info "Installing yazi from GitHub release..."
+    local version
+    version="$(curl -fsSL https://api.github.com/repos/sxyazi/yazi/releases/latest | grep -Po '"tag_name": "\K[^"]*')"
+    local tarball="/tmp/yazi.zip"
+    curl -fsSL "https://github.com/sxyazi/yazi/releases/download/${version}/yazi-x86_64-unknown-linux-gnu.zip" -o "$tarball"
+    unzip -o "$tarball" -d /tmp/yazi
+    sudo mv /tmp/yazi/yazi-x86_64-unknown-linux-gnu/yazi /usr/local/bin/
+    sudo mv /tmp/yazi/yazi-x86_64-unknown-linux-gnu/ya /usr/local/bin/
+    rm -rf "$tarball" /tmp/yazi
 }
 
 install_protonvpn() {
@@ -286,31 +254,24 @@ install_fonts() {
 
     info "Installing JetBrainsMono Nerd Font..."
     mkdir -p "$font_dir"
-    _install_nerd_font() {
-        local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
-        wget -q "$url" -O /tmp/JetBrainsMono.tar.xz
-        tar -xf /tmp/JetBrainsMono.tar.xz -C "$1"
-        fc-cache -f
-        rm /tmp/JetBrainsMono.tar.xz
-    }
-    run _install_nerd_font "$font_dir"
+    wget -q "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" -O /tmp/JetBrainsMono.tar.xz
+    tar -xf /tmp/JetBrainsMono.tar.xz -C "$font_dir"
+    fc-cache -f
+    rm /tmp/JetBrainsMono.tar.xz
 }
 
 # ── GTK Theme ──
 install_gruvbox_gtk() {
-    if [[ -d /usr/share/themes/Gruvbox-Dark ]] || [[ -d "$HOME/.themes/Gruvbox-Dark" ]]; then
+    if [[ -d /usr/share/themes/Gruvbox-Material-Dark ]]; then
         info "Gruvbox GTK theme already installed"
         return
     fi
 
-    info "Installing Gruvbox GTK theme..."
-    mkdir -p "$HOME/.themes"
-    _install_gtk_theme() {
-        git clone --depth 1 https://github.com/Fausto-Korpsvansen/Gruvbox-GTK-Theme.git /tmp/gruvbox-gtk
-        cp -r /tmp/gruvbox-gtk/themes/Gruvbox-Dark* "$HOME/.themes/"
-        rm -rf /tmp/gruvbox-gtk
-    }
-    run _install_gtk_theme
+    info "Installing Gruvbox Material Dark GTK theme..."
+    rm -rf /tmp/gruvbox-material-gtk
+    git clone --depth 1 https://github.com/TheGreatMcPain/gruvbox-material-gtk.git /tmp/gruvbox-material-gtk
+    sudo cp -r /tmp/gruvbox-material-gtk/themes/Gruvbox-Material-Dark /usr/share/themes/
+    rm -rf /tmp/gruvbox-material-gtk
 }
 
 # ── Cursor theme ──
@@ -322,13 +283,9 @@ install_bibata_cursor() {
 
     info "Installing Bibata cursor theme..."
     mkdir -p "$HOME/.icons"
-    _install_bibata() {
-        local url="https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern-Classic.tar.xz"
-        wget -q "$url" -O /tmp/bibata.tar.xz
-        tar -xf /tmp/bibata.tar.xz -C "$HOME/.icons/"
-        rm /tmp/bibata.tar.xz
-    }
-    run _install_bibata
+    wget -q "https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern-Classic.tar.xz" -O /tmp/bibata.tar.xz
+    tar -xf /tmp/bibata.tar.xz -C "$HOME/.icons/"
+    rm /tmp/bibata.tar.xz
 }
 
 # ── LightDM ──
@@ -339,12 +296,58 @@ configure_lightdm() {
     sudo cp "$DOTFILES_DIR/etc/lightdm/lightdm-gtk-greeter.css" /etc/lightdm/lightdm-gtk-greeter.css
 }
 
+# ── GRUB theme ──
+configure_grub_theme() {
+    info "Installing GRUB Gruvbox theme..."
+    rm -rf /tmp/tartarus-grub
+    git clone --depth 1 https://github.com/AllJavi/tartarus-grub.git /tmp/tartarus-grub
+
+    # Remove the logo from the theme
+    rm -f /tmp/tartarus-grub/tartarus/logo.png
+    sed -i '/^+ image {/,/^}/d' /tmp/tartarus-grub/tartarus/theme.txt
+
+    sudo mkdir -p /boot/grub/themes
+    sudo rm -rf /boot/grub/themes/tartarus
+    sudo cp -r /tmp/tartarus-grub/tartarus /boot/grub/themes/
+    rm -rf /tmp/tartarus-grub
+
+    # Enable the theme in GRUB config
+    if ! grep -q 'GRUB_THEME=' /etc/default/grub; then
+        echo 'GRUB_THEME="/boot/grub/themes/tartarus/theme.txt"' | sudo tee -a /etc/default/grub > /dev/null
+    else
+        sudo sed -i 's|^GRUB_THEME=.*|GRUB_THEME="/boot/grub/themes/tartarus/theme.txt"|' /etc/default/grub
+    fi
+    sudo update-grub
+}
+
 # ── Plymouth theme ──
 configure_plymouth() {
     info "Installing Gruvbox Plymouth theme..."
     sudo cp -r "$DOTFILES_DIR/etc/plymouth/themes/gruvbox" /usr/share/plymouth/themes/
     sudo cp "$DOTFILES_DIR/etc/plymouth/plymouthd.conf" /etc/plymouth/plymouthd.conf
-    run sudo update-initramfs -u || warn "Failed to update initramfs — run: sudo update-initramfs -u"
+
+    # Ensure GRUB passes 'splash' so plymouth activates
+    local grub_default="/etc/default/grub"
+    if ! grep -q 'splash' "$grub_default"; then
+        info "Adding 'splash' to GRUB_CMDLINE_LINUX_DEFAULT..."
+        sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"/GRUB_CMDLINE_LINUX_DEFAULT="\1 splash"/' "$grub_default"
+    fi
+
+    # Set native graphics mode so plymouth renders at full resolution
+    if grep -q '^#\?GRUB_GFXMODE=' "$grub_default"; then
+        sudo sed -i 's/^#\?GRUB_GFXMODE=.*/GRUB_GFXMODE=auto/' "$grub_default"
+    else
+        echo 'GRUB_GFXMODE=auto' | sudo tee -a "$grub_default" > /dev/null
+    fi
+    # Keep the same mode for the linux payload (plymouth)
+    if ! grep -q '^GRUB_GFXPAYLOAD_LINUX=' "$grub_default"; then
+        echo 'GRUB_GFXPAYLOAD_LINUX=keep' | sudo tee -a "$grub_default" > /dev/null
+    else
+        sudo sed -i 's/^GRUB_GFXPAYLOAD_LINUX=.*/GRUB_GFXPAYLOAD_LINUX=keep/' "$grub_default"
+    fi
+
+    sudo update-grub
+    sudo plymouth-set-default-theme -R gruvbox || warn "Failed to set plymouth theme — run: sudo plymouth-set-default-theme -R gruvbox"
 }
 
 # ── Claude CLI ──
@@ -354,12 +357,18 @@ install_claude() {
         return
     fi
     info "Installing Claude CLI..."
-    run bash -c 'curl -fsSL https://cli.anthropic.com/install.sh | sh'
+    curl -fsSL https://claude.ai/install.sh | bash
 }
 
 # ── Secure Boot ──
 configure_secureboot() {
     info "Configuring Secure Boot support..."
+
+    # Skip on non-UEFI systems
+    if [[ ! -d /sys/firmware/efi ]]; then
+        warn "Not a UEFI system — skipping Secure Boot config"
+        return
+    fi
 
     # Verify shim + signed GRUB are installed
     if ! dpkg -l shim-signed grub-efi-amd64-signed &>/dev/null; then
@@ -373,17 +382,17 @@ configure_secureboot() {
         --bootloader-id=debian --uefi-secure-boot
     sudo update-grub
 
-    # Set up MOK signing for DKMS modules (e.g. NVIDIA, VirtualBox)
+    # Set up MOK signing for DKMS modules (e.g. VirtualBox)
     if dkms status 2>/dev/null | grep -q .; then
         info "DKMS modules detected — setting up MOK signing..."
         configure_mok_signing
     else
         info "No DKMS modules found — MOK signing not needed (yet)"
-        info "  If you install DKMS modules later (e.g. NVIDIA), re-run: configure_mok_signing"
+        info "  If you install DKMS modules later, re-run: configure_mok_signing"
     fi
 
     # Verify the boot chain
-    if [[ -f /boot/efi/EFI/debian/shimx64.efi ]]; then
+    if sudo test -f /boot/efi/EFI/debian/shimx64.efi; then
         info "Secure Boot chain verified: shimx64.efi present"
     else
         warn "shimx64.efi not found in /boot/efi/EFI/debian/ — check grub-install output"
@@ -487,7 +496,6 @@ harden_system() {
             /etc/apparmor.d/usr.bin.man
             /etc/apparmor.d/usr.sbin.cupsd
             /etc/apparmor.d/usr.sbin.cups-browsed
-            /etc/apparmor.d/nvidia_modprobe
             /etc/apparmor.d/lsb_release
             /etc/apparmor.d/unix-chkpwd
             /etc/apparmor.d/unprivileged_userns
@@ -514,15 +522,24 @@ stow_packages() {
         i3 alacritty polybar rofi i3blocks picom dunst
         bash tmux scripts x11 gtk xdg flameshot fzf code git
         greenclip glow qt5ct fastfetch fontconfig starship readline
+        claude
     )
 
     # Ensure target dirs exist
     mkdir -p "$HOME/.config" "$HOME/.local/bin"
 
+    # Remove files that conflict with stow
+    for f in .bashrc .profile .claude/settings.json; do
+        if [[ -f "$HOME/$f" && ! -L "$HOME/$f" ]]; then
+            info "  Backing up ~/$f to ~/${f}.bak"
+            mv "$HOME/$f" "$HOME/${f}.bak"
+        fi
+    done
+
     for pkg in "${packages[@]}"; do
         if [[ -d "$pkg" ]]; then
             info "  Stowing $pkg..."
-            run stow -v --target="$HOME" --restow "$pkg" || true
+            stow -v --target="$HOME" --restow "$pkg" || true
         fi
     done
 }
@@ -577,8 +594,11 @@ post_install() {
     info "  1. Set GTK theme with: lxappearance"
     info "  2. Log out and select i3 from your display manager"
     info "  3. Enable Secure Boot in BIOS — the shim chain is installed"
-    if dkms status 2>/dev/null | grep -q .; then
-        info "  4. Reboot and enroll MOK key when prompted (use the password you set)"
+    if sudo dkms status 2>/dev/null | grep -q .; then
+        info "  4. Enroll MOK key for Secure Boot (required for DKMS modules):"
+        info "       sudo mokutil --import /var/lib/shim-signed/mok/MOK.der"
+        info "     Set a one-time password, then reboot. The MOK Manager blue screen will appear:"
+        info "       Select 'Enroll MOK' → 'Continue' → 'Yes' → enter the password → 'Reboot'"
     fi
 }
 
@@ -629,6 +649,7 @@ main() {
         exit 0
     fi
 
+    bootstrap
     setup_repos
     install_packages
     install_fonts
@@ -636,6 +657,7 @@ main() {
     install_bibata_cursor
     stow_packages
     configure_lightdm
+    configure_grub_theme
     configure_plymouth
     install_vscode_extensions
     install_claude

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Flameshot
+GenericName=Screenshot tool
+Comment=Powerful yet simple to use screenshot software.
+Exec=sh -c 'sleep 0.5 && flameshot gui'
+Icon=org.flameshot.Flameshot
+Terminal=false
+Type=Application
+Categories=Graphics;
+StartupNotify=false
+StartupWMClass=flameshot
+Keywords=flameshot;screenshot;capture;

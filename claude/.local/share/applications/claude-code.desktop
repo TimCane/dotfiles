@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Claude Code
+GenericName=AI Assistant
+Comment=Claude Code CLI in tmux
+Exec=alacritty -e bash -ic cc
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Development;
+StartupNotify=false
+Keywords=claude;ai;code;

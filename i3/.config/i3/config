@@ -206,8 +206,6 @@ for_window [window_role="task_dialog"] floating enable
 for_window [instance="dropdown"] floating enable, resize set 1200 600, move position center, move scratchpad
 exec --no-startup-id alacritty --class dropdown -e tmux new-session -A -s scratch
 
-# ── Workspace assignments ──
-assign [class="firefox"] $ws2
 
 # ── Polybar (replaces i3bar) ──
 exec_always --no-startup-id ~/.config/polybar/launch.sh
