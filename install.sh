@@ -296,11 +296,6 @@ configure_lightdm() {
 
 # ── GRUB theme ──
 configure_grub_theme() {
-    if [[ -d /boot/grub/themes/tartarus ]]; then
-        info "GRUB Gruvbox theme already installed"
-        return
-    fi
-
     info "Installing GRUB Gruvbox theme..."
     rm -rf /tmp/tartarus-grub
     git clone --depth 1 https://github.com/AllJavi/tartarus-grub.git /tmp/tartarus-grub
@@ -310,6 +305,7 @@ configure_grub_theme() {
     sed -i '/^+ image {/,/^}/d' /tmp/tartarus-grub/tartarus/theme.txt
 
     sudo mkdir -p /boot/grub/themes
+    sudo rm -rf /boot/grub/themes/tartarus
     sudo cp -r /tmp/tartarus-grub/tartarus /boot/grub/themes/
     rm -rf /tmp/tartarus-grub
 
