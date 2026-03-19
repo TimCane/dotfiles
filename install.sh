@@ -84,6 +84,13 @@ run() {
     return "$rc"
 }
 
+# ── Bootstrap essentials (needed before anything else) ──
+bootstrap() {
+    info "Installing bootstrap dependencies..."
+    run sudo apt update
+    run sudo apt install -y curl wget gnupg unzip
+}
+
 # ── Third-party repositories ──
 setup_repos() {
     # VS Code repository
@@ -151,6 +158,9 @@ install_packages() {
         ufw
         apparmor-utils
         shim-signed grub-efi-amd64-signed sbsigntool mokutil
+        imagemagick
+        jq
+        pipx
     )
 
     local audio=(pipewire pipewire-pulse wireplumber pavucontrol)
@@ -212,7 +222,7 @@ install_greenclip() {
 }
 
 install_flashfocus() {
-    pip install --user flashfocus 2>/dev/null || pipx install flashfocus
+    pipx install flashfocus
 }
 
 install_betterlockscreen() {
@@ -228,13 +238,15 @@ install_proton_pass() {
 }
 
 install_yazi() {
-    # Check for cargo, else suggest manual install
-    if command -v cargo &>/dev/null; then
-        cargo install --locked yazi-fm yazi-cli
-    else
-        error "Install yazi manually: https://yazi-rs.github.io/docs/installation"
-        return 1
-    fi
+    info "Installing yazi from GitHub release..."
+    local version
+    version="$(curl -fsSL https://api.github.com/repos/sxyazi/yazi/releases/latest | grep -Po '"tag_name": "\K[^"]*')"
+    local tarball="/tmp/yazi.zip"
+    curl -fsSL "https://github.com/sxyazi/yazi/releases/download/${version}/yazi-x86_64-unknown-linux-gnu.zip" -o "$tarball"
+    unzip -o "$tarball" -d /tmp/yazi
+    sudo mv /tmp/yazi/yazi-x86_64-unknown-linux-gnu/yazi /usr/local/bin/
+    sudo mv /tmp/yazi/yazi-x86_64-unknown-linux-gnu/ya /usr/local/bin/
+    rm -rf "$tarball" /tmp/yazi
 }
 
 install_protonvpn() {
@@ -306,7 +318,7 @@ install_gruvbox_gtk() {
     info "Installing Gruvbox GTK theme..."
     mkdir -p "$HOME/.themes"
     _install_gtk_theme() {
-        git clone --depth 1 https://github.com/Fausto-Korpsvansen/Gruvbox-GTK-Theme.git /tmp/gruvbox-gtk
+        git clone --depth 1 https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git /tmp/gruvbox-gtk
         cp -r /tmp/gruvbox-gtk/themes/Gruvbox-Dark* "$HOME/.themes/"
         rm -rf /tmp/gruvbox-gtk
     }
@@ -629,6 +641,7 @@ main() {
         exit 0
     fi
 
+    bootstrap
     setup_repos
     install_packages
     install_fonts
