@@ -143,6 +143,9 @@ install_packages() {
         papirus-icon-theme
         lxappearance
         qt5ct
+        sassc
+        gtk2-engines-murrine
+        gnome-themes-extra
     )
 
     # Utilities
@@ -319,7 +322,7 @@ install_gruvbox_gtk() {
     mkdir -p "$HOME/.themes"
     rm -rf /tmp/gruvbox-gtk
     git clone --depth 1 https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git /tmp/gruvbox-gtk
-    bash /tmp/gruvbox-gtk/themes/install.sh -c Dark -t default
+    bash /tmp/gruvbox-gtk/themes/install.sh -c dark -t default
     rm -rf /tmp/gruvbox-gtk
 }
 
