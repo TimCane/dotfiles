@@ -23,72 +23,12 @@ info()  { echo -e "${green}[+]${reset} $*"; }
 warn()  { echo -e "${yellow}[!]${reset} $*"; }
 error() { echo -e "${red}[x]${reset} $*"; }
 
-# Run a command with rolling dimmed output (last 5 lines), cleared on finish.
-# On failure the last 20 lines are shown for debugging.
-run() {
-    local max=5
-    local tmp
-    tmp="$(mktemp)"
-    local cols
-    cols="$(tput cols 2>/dev/null || echo 80)"
-
-    "$@" &> "$tmp" &
-    local pid=$!
-
-    local on_screen=0 prev_total=0
-    while kill -0 "$pid" 2>/dev/null; do
-        local total
-        total="$(wc -l < "$tmp")"
-        if ((total != prev_total)); then
-            local show=$((total < max ? total : max))
-            ((on_screen > 0)) && printf '\033[%dA' "$on_screen"
-            tail -n "$show" "$tmp" | while IFS= read -r l; do
-                printf "${dim}  \033[K%.*s${reset}\n" "$((cols - 4))" "$l"
-            done
-            on_screen=$show
-            prev_total=$total
-        fi
-        sleep 0.1
-    done
-
-    wait "$pid"
-    local rc=$?
-
-    # Final redraw in case output arrived after last poll
-    local total
-    total="$(wc -l < "$tmp")"
-    if ((total != prev_total)); then
-        local show=$((total < max ? total : max))
-        ((on_screen > 0)) && printf '\033[%dA' "$on_screen"
-        tail -n "$show" "$tmp" | while IFS= read -r l; do
-            printf "${dim}  \033[K%.*s${reset}\n" "$((cols - 4))" "$l"
-        done
-        on_screen=$show
-    fi
-
-    # Clear rolling area
-    if ((on_screen > 0)); then
-        printf '\033[%dA' "$on_screen"
-        for ((i = 0; i < on_screen; i++)); do printf '\033[K\n'; done
-        printf '\033[%dA' "$on_screen"
-    fi
-
-    # On failure, dump last 20 lines for debugging
-    if ((rc != 0)); then
-        tail -n 20 "$tmp" | while IFS= read -r l; do
-            printf "${dim}  %s${reset}\n" "$l"
-        done
-    fi
-
-    rm -f "$tmp"
-    return "$rc"
-}
 
 # ── Bootstrap essentials (needed before anything else) ──
 bootstrap() {
     info "Installing bootstrap dependencies..."
-    run sudo apt update
-    run sudo apt install -y curl wget gnupg unzip
+    sudo apt update
+    sudo apt install -y curl wget gnupg unzip
 }
 
 # ── Third-party repositories ──
@@ -168,7 +108,7 @@ install_packages() {
 
     local audio=(pipewire pipewire-pulse wireplumber pavucontrol)
     local filemanager=(thunar tumbler ffmpegthumbnailer)
-    local media=(nsxiv mpv)
+    local media=(nsxiv mpv firefox-esr)
     local archives=(file-roller p7zip-full unrar)
     local disktools=(gnome-disk-utility baobab)
     local fonts=(fonts-noto-color-emoji fonts-noto-cjk fonts-liberation)
@@ -179,16 +119,16 @@ install_packages() {
     local terminal=(bash-completion eza bat)
 
     info "Updating package lists..."
-    run sudo apt update
+    sudo apt update
     info "Installing apt packages..."
-    run sudo apt install -y "${core[@]}" "${polybar[@]}" "${theming[@]}" "${utils[@]}" \
+    sudo apt install -y "${core[@]}" "${polybar[@]}" "${theming[@]}" "${utils[@]}" \
         "${audio[@]}" "${filemanager[@]}" "${media[@]}" "${archives[@]}" \
         "${disktools[@]}" "${fonts[@]}" "${desktop[@]}" "${power[@]}" \
         "${maintenance[@]}" "${vpn[@]}" "${terminal[@]}"
 
     # Secure boot packages — optional, may not be available on all systems
     if [[ -d /sys/firmware/efi ]]; then
-        run sudo apt install -y shim-signed grub-efi-amd64-signed || warn "Secure boot packages not available"
+        sudo apt install -y shim-signed grub-efi-amd64-signed || warn "Secure boot packages not available"
     fi
 
     # Packages not in default repos — install manually if missing
@@ -313,14 +253,10 @@ install_fonts() {
 
     info "Installing JetBrainsMono Nerd Font..."
     mkdir -p "$font_dir"
-    _install_nerd_font() {
-        local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
-        wget -q "$url" -O /tmp/JetBrainsMono.tar.xz
-        tar -xf /tmp/JetBrainsMono.tar.xz -C "$1"
-        fc-cache -f
-        rm /tmp/JetBrainsMono.tar.xz
-    }
-    run _install_nerd_font "$font_dir"
+    wget -q "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" -O /tmp/JetBrainsMono.tar.xz
+    tar -xf /tmp/JetBrainsMono.tar.xz -C "$font_dir"
+    fc-cache -f
+    rm /tmp/JetBrainsMono.tar.xz
 }
 
 # ── GTK Theme ──
@@ -347,13 +283,9 @@ install_bibata_cursor() {
 
     info "Installing Bibata cursor theme..."
     mkdir -p "$HOME/.icons"
-    _install_bibata() {
-        local url="https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern-Classic.tar.xz"
-        wget -q "$url" -O /tmp/bibata.tar.xz
-        tar -xf /tmp/bibata.tar.xz -C "$HOME/.icons/"
-        rm /tmp/bibata.tar.xz
-    }
-    run _install_bibata
+    wget -q "https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern-Classic.tar.xz" -O /tmp/bibata.tar.xz
+    tar -xf /tmp/bibata.tar.xz -C "$HOME/.icons/"
+    rm /tmp/bibata.tar.xz
 }
 
 # ── LightDM ──
@@ -364,12 +296,36 @@ configure_lightdm() {
     sudo cp "$DOTFILES_DIR/etc/lightdm/lightdm-gtk-greeter.css" /etc/lightdm/lightdm-gtk-greeter.css
 }
 
+# ── GRUB theme ──
+configure_grub_theme() {
+    if [[ -d /boot/grub/themes/tartarus ]]; then
+        info "GRUB Gruvbox theme already installed"
+        return
+    fi
+
+    info "Installing GRUB Gruvbox theme..."
+    rm -rf /tmp/tartarus-grub
+    git clone --depth 1 https://github.com/AllJavi/tartarus-grub.git /tmp/tartarus-grub
+    sudo mkdir -p /boot/grub/themes
+    sudo cp -r /tmp/tartarus-grub/tartarus /boot/grub/themes/
+    rm -rf /tmp/tartarus-grub
+
+    # Enable the theme in GRUB config
+    if ! grep -q 'GRUB_THEME=' /etc/default/grub; then
+        echo 'GRUB_THEME="/boot/grub/themes/tartarus/theme.txt"' | sudo tee -a /etc/default/grub > /dev/null
+    else
+        sudo sed -i 's|^GRUB_THEME=.*|GRUB_THEME="/boot/grub/themes/tartarus/theme.txt"|' /etc/default/grub
+    fi
+    sudo update-grub
+}
+
 # ── Plymouth theme ──
 configure_plymouth() {
     info "Installing Gruvbox Plymouth theme..."
     sudo cp -r "$DOTFILES_DIR/etc/plymouth/themes/gruvbox" /usr/share/plymouth/themes/
     sudo cp "$DOTFILES_DIR/etc/plymouth/plymouthd.conf" /etc/plymouth/plymouthd.conf
-    run sudo update-initramfs -u || warn "Failed to update initramfs — run: sudo update-initramfs -u"
+    sudo plymouth-set-default-theme gruvbox
+    sudo update-initramfs -u || warn "Failed to update initramfs — run: sudo update-initramfs -u"
 }
 
 # ── Claude CLI ──
@@ -379,7 +335,7 @@ install_claude() {
         return
     fi
     info "Installing Claude CLI..."
-    run bash -c 'curl -fsSL https://cli.anthropic.com/install.sh | sh'
+    curl -fsSL https://cli.anthropic.com/install.sh | sh
 }
 
 # ── Secure Boot ──
@@ -561,7 +517,7 @@ stow_packages() {
     for pkg in "${packages[@]}"; do
         if [[ -d "$pkg" ]]; then
             info "  Stowing $pkg..."
-            run stow -v --target="$HOME" --restow "$pkg" || true
+            stow -v --target="$HOME" --restow "$pkg" || true
         fi
     done
 }
@@ -676,6 +632,7 @@ main() {
     install_bibata_cursor
     stow_packages
     configure_lightdm
+    configure_grub_theme
     configure_plymouth
     install_vscode_extensions
     install_claude
