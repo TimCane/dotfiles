@@ -103,6 +103,7 @@ install_packages() {
         imagemagick librsvg2-bin
         jq
         pipx
+        linux-headers-amd64
     )
 
     local audio=(pipewire pipewire-pulse wireplumber pavucontrol)
@@ -120,7 +121,8 @@ install_packages() {
     info "Updating package lists..."
     sudo apt update
     info "Installing apt packages..."
-    sudo apt install -y "${core[@]}" "${polybar[@]}" "${theming[@]}" "${utils[@]}" \
+    sudo DEBIAN_FRONTEND=noninteractive apt install -y \
+        "${core[@]}" "${polybar[@]}" "${theming[@]}" "${utils[@]}" \
         "${audio[@]}" "${filemanager[@]}" "${media[@]}" "${archives[@]}" \
         "${disktools[@]}" "${fonts[@]}" "${desktop[@]}" "${power[@]}" \
         "${maintenance[@]}" "${vpn[@]}" "${terminal[@]}"
@@ -324,7 +326,7 @@ configure_plymouth() {
     sudo cp -r "$DOTFILES_DIR/etc/plymouth/themes/gruvbox" /usr/share/plymouth/themes/
     sudo cp "$DOTFILES_DIR/etc/plymouth/plymouthd.conf" /etc/plymouth/plymouthd.conf
 
-    # Ensure GRUB passes 'splash' so plymouth activates (needed for graphical boot + LUKS prompt)
+    # Ensure GRUB passes 'splash' so plymouth activates
     local grub_default="/etc/default/grub"
     if ! grep -q 'splash' "$grub_default"; then
         info "Adding 'splash' to GRUB_CMDLINE_LINUX_DEFAULT..."
@@ -380,13 +382,13 @@ configure_secureboot() {
         --bootloader-id=debian --uefi-secure-boot
     sudo update-grub
 
-    # Set up MOK signing for DKMS modules (e.g. NVIDIA, VirtualBox)
+    # Set up MOK signing for DKMS modules (e.g. VirtualBox)
     if dkms status 2>/dev/null | grep -q .; then
         info "DKMS modules detected — setting up MOK signing..."
         configure_mok_signing
     else
         info "No DKMS modules found — MOK signing not needed (yet)"
-        info "  If you install DKMS modules later (e.g. NVIDIA), re-run: configure_mok_signing"
+        info "  If you install DKMS modules later, re-run: configure_mok_signing"
     fi
 
     # Verify the boot chain
@@ -494,7 +496,6 @@ harden_system() {
             /etc/apparmor.d/usr.bin.man
             /etc/apparmor.d/usr.sbin.cupsd
             /etc/apparmor.d/usr.sbin.cups-browsed
-            /etc/apparmor.d/nvidia_modprobe
             /etc/apparmor.d/lsb_release
             /etc/apparmor.d/unix-chkpwd
             /etc/apparmor.d/unprivileged_userns
@@ -593,8 +594,11 @@ post_install() {
     info "  1. Set GTK theme with: lxappearance"
     info "  2. Log out and select i3 from your display manager"
     info "  3. Enable Secure Boot in BIOS — the shim chain is installed"
-    if dkms status 2>/dev/null | grep -q .; then
-        info "  4. Reboot and enroll MOK key when prompted (use the password you set)"
+    if sudo dkms status 2>/dev/null | grep -q .; then
+        info "  4. Enroll MOK key for Secure Boot (required for DKMS modules):"
+        info "       sudo mokutil --import /var/lib/shim-signed/mok/MOK.der"
+        info "     Set a one-time password, then reboot. The MOK Manager blue screen will appear:"
+        info "       Select 'Enroll MOK' → 'Continue' → 'Yes' → enter the password → 'Reboot'"
     fi
 }
 

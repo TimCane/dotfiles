@@ -15,7 +15,7 @@ case "$HOST" in
                    --output DP-1 --off --output DP-3 --off --output DP-5 --off \
                    --output HDMI-0 --off --output USB-C-0 --off
         fi
-        i3-msg restart
+        pgrep -x i3 >/dev/null && i3-msg restart
         ;;
     *)
         # On laptop/other, use autorandr if available
