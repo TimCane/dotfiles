@@ -195,14 +195,20 @@ install_packages() {
     install_if_missing "protonvpn-cli" install_protonvpn
     install_if_missing "delta" install_delta
     install_if_missing "starship" install_starship
-    install_if_missing "ble" install_blesh
+    # ble.sh doesn't install a binary — check for its data directory
+    if [[ ! -d "$HOME/.local/share/blesh" ]]; then
+        warn "ble.sh not found, installing..."
+        install_blesh || error "Failed to install ble.sh — install it manually"
+    else
+        info "ble.sh already installed"
+    fi
 }
 
 install_if_missing() {
     local cmd="$1" installer="$2"
     if ! command -v "$cmd" &>/dev/null; then
         warn "$cmd not found, installing..."
-        run "$installer" || error "Failed to install $cmd — install it manually"
+        "$installer" || error "Failed to install $cmd — install it manually"
     else
         info "$cmd already installed"
     fi
@@ -374,6 +380,12 @@ install_claude() {
 configure_secureboot() {
     info "Configuring Secure Boot support..."
 
+    # Skip on non-UEFI systems
+    if [[ ! -d /sys/firmware/efi ]]; then
+        warn "Not a UEFI system — skipping Secure Boot config"
+        return
+    fi
+
     # Verify shim + signed GRUB are installed
     if ! dpkg -l shim-signed grub-efi-amd64-signed &>/dev/null; then
         error "shim-signed or grub-efi-amd64-signed not installed — cannot configure Secure Boot"
@@ -396,7 +408,7 @@ configure_secureboot() {
     fi
 
     # Verify the boot chain
-    if [[ -f /boot/efi/EFI/debian/shimx64.efi ]]; then
+    if sudo test -f /boot/efi/EFI/debian/shimx64.efi; then
         info "Secure Boot chain verified: shimx64.efi present"
     else
         warn "shimx64.efi not found in /boot/efi/EFI/debian/ — check grub-install output"
@@ -531,6 +543,14 @@ stow_packages() {
 
     # Ensure target dirs exist
     mkdir -p "$HOME/.config" "$HOME/.local/bin"
+
+    # Remove Debian default files that conflict with stow
+    for f in .bashrc .profile; do
+        if [[ -f "$HOME/$f" && ! -L "$HOME/$f" ]]; then
+            info "  Backing up ~/$f to ~/${f}.bak"
+            mv "$HOME/$f" "$HOME/${f}.bak"
+        fi
+    done
 
     for pkg in "${packages[@]}"; do
         if [[ -d "$pkg" ]]; then
