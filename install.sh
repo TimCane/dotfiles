@@ -160,7 +160,7 @@ install_packages() {
         plymouth plymouth-themes
         ufw
         apparmor-utils
-        shim-signed grub-efi-amd64-signed sbsigntool mokutil
+        sbsigntool mokutil
         imagemagick
         jq
         pipx
@@ -185,6 +185,11 @@ install_packages() {
         "${audio[@]}" "${filemanager[@]}" "${media[@]}" "${archives[@]}" \
         "${disktools[@]}" "${fonts[@]}" "${desktop[@]}" "${power[@]}" \
         "${maintenance[@]}" "${vpn[@]}" "${terminal[@]}"
+
+    # Secure boot packages — optional, may not be available on all systems
+    if [[ -d /sys/firmware/efi ]]; then
+        run sudo apt install -y shim-signed grub-efi-amd64-signed || warn "Secure boot packages not available"
+    fi
 
     # Packages not in default repos — install manually if missing
     install_if_missing "greenclip" install_greenclip
@@ -231,7 +236,7 @@ install_greenclip() {
 }
 
 install_flashfocus() {
-    pipx install flashfocus
+    pipx install --force flashfocus
 }
 
 install_betterlockscreen() {
@@ -239,6 +244,7 @@ install_betterlockscreen() {
     wget -q "$url" -O /tmp/bls-install.sh
     chmod +x /tmp/bls-install.sh
     /tmp/bls-install.sh user
+    export PATH="$HOME/.local/bin:$PATH"
 }
 
 install_proton_pass() {
