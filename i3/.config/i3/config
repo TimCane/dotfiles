@@ -90,6 +90,9 @@ bindsym $mod+Shift+space floating toggle
 bindsym $mod+space exec rofi -show drun -show-icons
 floating_modifier $mod
 
+# Sticky (show on all workspaces)
+bindsym $mod+y sticky toggle
+
 # Scratchpad
 bindsym $mod+Shift+minus move scratchpad
 bindsym $mod+minus scratchpad show
@@ -201,6 +204,7 @@ for_window [class="Nsxiv"] floating enable
 for_window [class="mpv"] floating enable
 for_window [window_role="pop-up"] floating enable
 for_window [window_role="task_dialog"] floating enable
+for_window [instance="Picture-in-Picture"] sticky enable
 
 # Dropdown scratchpad terminal
 for_window [instance="dropdown"] floating enable, resize set 1200 600, move position center, move scratchpad
